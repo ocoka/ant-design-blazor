@@ -1,0 +1,4 @@
+train:
+  tags: [dotnet]
+  when: manual
+  script: hostname -a
