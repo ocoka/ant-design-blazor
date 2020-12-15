@@ -2,9 +2,5 @@ train:
   tags: [test]
   when: manual
   script:
-    - dotnet --list-sdks
-    - dotnet --list-sdks > out.txt
-  artifacts:
-    paths:
-      - out.txt
-    expire_in: 1 day
+    - dotnet msbuild -target:Pack -property:TargetFramework=net5 -property:SolutionDir=. -property:Configuration=Release components/AntDesign.csproj
+    - dotnet nuget push "components/bin/Release/*.nupkg" --source gitlab
