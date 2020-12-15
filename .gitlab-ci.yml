@@ -1,4 +1,10 @@
 train:
   tags: [test]
   when: manual
-  script: hostname -a
+  script:
+    - dotnet --list-sdks
+    - dotnet --list-sdks > out.txt
+  artifacts:
+    paths:
+      - out.txt
+    expire_in: 1 day
