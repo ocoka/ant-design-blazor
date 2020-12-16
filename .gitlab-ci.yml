@@ -1,7 +1,7 @@
 train:
   tags: [test]
-  when: manual
+  only: tags
   script:
     - dotnet publish -c Release -p:SolutionDir=. -p:TargetFramework=net5 components/AntDesign.csproj
-    - dotnet pack -c Release -p:SolutionDir=. -p:TargetFrameworks=net5 components/AntDesign.csproj
+    - dotnet pack -c Release -p:SolutionDir=. -p:TargetFrameworks=net5 -p:PackageVersion=$CI_COMMIT_TAG components/AntDesign.csproj
     - dotnet nuget push "components/bin/Release/*.nupkg" --source gitlab
