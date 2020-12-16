@@ -2,4 +2,6 @@ train:
   tags: [test]
   when: manual
   script:
-    - hostname
+    - dotnet restore
+    - dotnet msbuild -target:Pack -property:TargetFramework=net5 -property:SolutionDir=. -property:Configuration=Release components/AntDesign.csproj
+    - dotnet nuget push "components/bin/Release/*.nupkg" --source gitlab
