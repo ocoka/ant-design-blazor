@@ -1,5 +1,5 @@
 train:
-  tags: [test]
+  tags: [dotnet]
   only: tags
   script:
     - dotnet publish -c Release -p:SolutionDir=. -p:TargetFramework=net5 components/AntDesign.csproj
