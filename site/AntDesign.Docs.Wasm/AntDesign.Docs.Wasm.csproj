@@ -29,7 +29,11 @@
     <DocFiles Include="$(SolutionDir)docs\**\*.*" />
   </ItemGroup>
 
-  <Target Name="CopyDocs" BeforeTargets="Build">
+  <Target Name="CopyDocs" BeforeTargets="Build" >
     <Copy SourceFiles="@(DocFiles)" DestinationFolder="$(ProjectDir)\wwwroot\docs\%(RecursiveDir)" ContinueOnError="true" />
   </Target>
+
+  <ItemGroup>
+    <Watch Include="../AntBlazor.Docs/**/*.razor" />
+  </ItemGroup>
 </Project>

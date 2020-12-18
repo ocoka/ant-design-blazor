@@ -47,7 +47,7 @@
   <PropertyGroup>
     <CLIProjectDir>site/AntDesign.Docs.Build.CLI</CLIProjectDir>
     <CLIPath>$(CLIProjectDir)/bin/Debug/net5/AntDesign.Docs.Build.CLI.dll</CLIPath>
-    <ProjectDir>$(SolutionDir)/site/AntBlazor.Docs</ProjectDir>
+    <ProjectDir>site/AntBlazor.Docs</ProjectDir>
   </PropertyGroup>
 
   <Target Name="RunCli" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug'">
