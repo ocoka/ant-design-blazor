@@ -9,7 +9,7 @@ nuget:
 nuget-night:
   tags: [dotnet]
   only:
-    - master
+    - develop
   when: manual
   script:
     - dotnet publish -c Release -p:SolutionDir=. -p:TargetFramework=net5 components/AntDesign.csproj
