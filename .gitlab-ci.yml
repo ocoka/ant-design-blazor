@@ -13,5 +13,5 @@ nuget-night:
   when: manual
   script:
     - dotnet publish -c Release -p:SolutionDir=. -p:TargetFramework=net5 components/AntDesign.csproj
-    - dotnet pack -c Release -p:SolutionDir=. -p:TargetFrameworks=net5 -p:PackageVersion=5.0-night-$CI_COMMIT_SHORT_SHA components/AntDesign.csproj
+    - dotnet pack -c Release -p:SolutionDir=. -p:TargetFrameworks=net5 -p:PackageVersion=0.5.2-night-$CI_COMMIT_SHORT_SHA components/AntDesign.csproj
     - dotnet nuget push "components/bin/Release/*.nupkg" --source gitlab
