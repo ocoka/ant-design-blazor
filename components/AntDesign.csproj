@@ -25,6 +25,10 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>AntDesign.xml</DocumentationFile>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <DebugSymbols>true</DebugSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -48,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework) == 'net5'">
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,7 +63,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="OneOf" Version="2.1.155" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitLab" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)node_modules') ">
