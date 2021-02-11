@@ -101,6 +101,11 @@ namespace AntDesign
             RangePickerDefaults.ProcessDefaults(Value, DefaultValue, DefaultPickerValue, PickerValues, UseDefaultPickerValue);
             _pickerValuesAfterInit[0] = PickerValues[0];
             _pickerValuesAfterInit[1] = PickerValues[1];
+            if (_value == null)
+            {
+                _value = CreateInstance();
+                ValueChanged.InvokeAsync(_value);
+            }
         }
 
         /// <summary>
@@ -202,8 +207,21 @@ namespace AntDesign
             _isSetPicker = false;
 
             var array = CurrentValue as Array;
-            array.SetValue(default, 0);
-            array.SetValue(default, 1);
+            if (!IsNullable && DefaultValue != null)
+            {
+                var defaults = DefaultValue as Array;
+                array.SetValue(defaults.GetValue(0), 0);
+                array.SetValue(defaults.GetValue(1), 1);
+            }
+            else
+            {
+                array.SetValue(default, 0);
+                array.SetValue(default, 1);
+            }
+
+            (string first, string second) = DatePickerPlaceholder.GetRangePlaceHolderByType(_pickerStatus[0]._initPicker, Locale);
+            _placeholders[0] = first;
+            _placeholders[1] = second;
 
             _pickerStatus[0]._hadSelectValue = false;
             _pickerStatus[1]._hadSelectValue = false;
