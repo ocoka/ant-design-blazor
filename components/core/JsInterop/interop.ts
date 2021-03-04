@@ -156,12 +156,12 @@ export function getBoundingClientRect(element) {
 export function addDomEventListener(element, eventName, preventDefault, invoker) {
   let callback = args => {
     const obj = {};
-    for (let k in args) {                
+    for (let k in args) {
       if (k !== 'originalTarget') { //firefox occasionally raises Permission Denied when this property is being stringified
         obj[k] = args[k];
       }
-    }    
-    let json = JSON.stringify(obj, (k, v) => {          
+    }
+    let json = JSON.stringify(obj, (k, v) => {
       if (v instanceof Node) return 'Node';
       if (v instanceof Window) return 'Window';
       return v;
@@ -179,7 +179,7 @@ export function addDomEventListener(element, eventName, preventDefault, invoker)
       window.addEventListener(eventName, callback);
     }
   } else {
-    let dom = getDom(element);    
+    let dom = getDom(element);
     (dom as HTMLElement).addEventListener(eventName, callback);
   }
 }
@@ -485,6 +485,88 @@ export function getMaxZIndex() {
   return [...document.all].reduce((r, e) => Math.max(r, +window.getComputedStyle(e).zIndex || 0), 0)
 }
 
+export function getStyle(element, styleProp) {        
+  if (element.currentStyle)
+    return element.currentStyle[styleProp];
+  else if (window.getComputedStyle)
+    return document.defaultView.getComputedStyle(element, null).getPropertyValue(styleProp);
+}
+
+export function getTextAreaInfo(element) {
+    var result = {};
+    var dom = getDom(element);
+    result["scrollHeight"] = dom.scrollHeight || 0;
+
+  if (element.currentStyle) {
+    result["lineHeight"] = parseFloat(element.currentStyle["line-height"]);
+    result["paddingTop"] = parseFloat(element.currentStyle["padding-top"]);
+    result["paddingBottom"] = parseFloat(element.currentStyle["padding-bottom"]);
+    result["borderBottom"] = parseFloat(element.currentStyle["border-bottom"]);
+    result["borderTop"] = parseFloat(element.currentStyle["border-top"]);
+  }
+  else if (window.getComputedStyle) {
+    result["lineHeight"] = parseFloat(document.defaultView.getComputedStyle(element, null).getPropertyValue("line-height"));
+    result["paddingTop"] = parseFloat(document.defaultView.getComputedStyle(element, null).getPropertyValue("padding-top"));
+    result["paddingBottom"] = parseFloat(document.defaultView.getComputedStyle(element, null).getPropertyValue("padding-bottom"));
+    result["borderBottom"] = parseFloat(document.defaultView.getComputedStyle(element, null).getPropertyValue("border-bottom"));
+    result["borderTop"] = parseFloat(document.defaultView.getComputedStyle(element, null).getPropertyValue("border-top"));
+  }
+  return result;
+}
+
+
+const funcDict = {};
+
+export function registerResizeTextArea(element, minRows, maxRows, objReference) {
+    if (!objReference) {
+        disposeResizeTextArea(element);
+    }
+    else {
+        objReferenceDict[element.id] = objReference;
+        funcDict[element.id + "input"] = function () { resizeTextArea(element, minRows, maxRows); }
+        element.addEventListener("input", funcDict[element.id + "input"]);
+        return getTextAreaInfo(element);
+    }
+}
+
+export function disposeResizeTextArea(element) {
+    element.removeEventListener("input", funcDict[element.id + "input"]);
+    objReferenceDict[element.id] = null;
+    funcDict[element.id + "input"] = null;
+
+}
+
+export function resizeTextArea(element, minRows, maxRows) {
+    var dims = getTextAreaInfo(element);
+    var rowHeight = dims["lineHeight"];
+    var offsetHeight = dims["paddingTop"] + dims["paddingBottom"] + dims["borderTop"] + dims["borderBottom"];
+    var oldHeight = parseFloat(element.style.height);
+    element.style.height = 'auto';
+    
+    var rows = Math.trunc(element.scrollHeight / rowHeight);
+    rows = Math.max(minRows, rows);
+
+    var newHeight = 0;
+    if (rows > maxRows) {
+        rows = maxRows;
+
+        newHeight = (rows * rowHeight + offsetHeight);
+        element.style.height = newHeight + "px";
+        element.style.overflowY = "visible";
+    }
+    else {
+        newHeight = rows * rowHeight + offsetHeight;
+        element.style.height = newHeight + "px";
+        element.style.overflowY = "hidden";
+    }
+    if (oldHeight !== newHeight) {
+        let textAreaObj = objReferenceDict[element.id];
+        textAreaObj.invokeMethodAsync("ChangeSizeAsyncJs", parseFloat(element.scrollWidth), newHeight);
+    }
+}
+
+
+
 const objReferenceDict = {};
 export function disposeObj(objReferenceName) {
   delete objReferenceDict[objReferenceName];
@@ -524,14 +606,16 @@ export function bindTableHeaderAndBodyScroll(bodyRef, headerRef) {
 }
 
 export function unbindTableHeaderAndBodyScroll(bodyRef) {
-  bodyRef.removeEventListener('scroll', bodyRef.bindScrollLeftToHeader);
+  if (bodyRef) {
+    bodyRef.removeEventListener('scroll', bodyRef.bindScrollLeftToHeader);
+  }
 }
 
 function preventCursorMoveOnArrowUp(e) {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        return false;
-    }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    return false;
+  }
 }
 
 export function addPreventCursorMoveOnArrowUp(inputElement) {
@@ -543,4 +627,3 @@ export function removePreventCursorMoveOnArrowUp(inputElement) {
   let dom = getDom(inputElement);
   (dom as HTMLElement).removeEventListener("keydown", preventCursorMoveOnArrowUp);
 }
-
