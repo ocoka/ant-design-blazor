@@ -67,7 +67,7 @@ else if (IsBody && RowSpan != 0 && ColSpan != 0)
         <td class="ant-table-cell ant-table-row-expand-icon-cell">
             @if (Table.RowExpandable(RowData) && (!Table.TreeMode || !RowData.HasChildren))
             {
-                <button type="button" @onclick="()=> RowData.Expanded = !RowData.Expanded"
+                <button type="button" @onclick="ToggleTreeNode"
                         class="ant-table-row-expand-icon @(RowData.Expanded?"ant-table-row-expand-icon-expanded":"ant-table-row-expand-icon-collapsed")"
                         aria-label="@(RowData.Expanded?Table.Locale.Collapse:Table.Locale.Expand)"></button>
             }
@@ -169,7 +169,13 @@ readonly RenderFragment<Column<TData>> FilterToolTipSorter = col =>
                     @col.ToolTipSorter(col)
                 }
             </span>
-            <Dropdown Trigger="new[] { TriggerType.Click }" Visible="col._filterOpened" Placement="PlacementType.BottomRight" TriggerReference="col._filterTriggerRef">
+            <Dropdown 
+                Trigger="new[] { TriggerType.Click }"
+                Visible="col._filterOpened" 
+                Placement="PlacementType.BottomRight" 
+                TriggerReference="col._filterTriggerRef"
+                @attributes="@(new Dictionary<string, object>() { ["OnMaskClick"] = _callbackFactory.Create(col, ()=> col.FilterConfirm()) })"
+            >
                 <Unbound>
                     <span @ref="@col._filterTriggerRef" class="ant-table-filter-trigger-container @(col._filterOpened?" ant-table-filter-trigger-container-open":"")">
                         <span role="button" tabindex="-1" class="ant-dropdown-trigger ant-table-filter-trigger @(col._hasFilterSelected?"active":"")"

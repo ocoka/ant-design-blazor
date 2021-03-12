@@ -17,7 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace AntDesign
 {
-    public partial class Select<TItemValue, TItem>
+    public partial class Select<TItemValue, TItem>: AntInputComponentBase<TItemValue>
     {
         #region Parameters
 
@@ -82,7 +82,7 @@ namespace AntDesign
                 _getLabel = SelectItemPropertyHelper.CreateGetLabelFunc<TItem>(value);
                 if (SelectMode == SelectMode.Tags)
                 {
-                    _setLabel = SelectItemPropertyHelper.CreateSetLabelFunc<TItem>(value);                    
+                    _setLabel = SelectItemPropertyHelper.CreateSetLabelFunc<TItem>(value);
                 }
                 _labelName = value;
             }
@@ -140,7 +140,8 @@ namespace AntDesign
         /// <summary>
         /// Converts custom tag (a string) to TItemValue type.
         /// </summary>
-        [Parameter] public Func<string, TItemValue> CustomTagLabelToValue { get; set; } = (label) => (TItemValue)TypeDescriptor.GetConverter(typeof(TItemValue)).ConvertFromInvariantString(label);
+        [Parameter] public Func<string, TItemValue> CustomTagLabelToValue { get; set; } =
+            (label) => (TItemValue)TypeDescriptor.GetConverter(typeof(TItemValue)).ConvertFromInvariantString(label);
 
         [Parameter]
         public IEnumerable<TItem> DataSource
@@ -219,7 +220,13 @@ namespace AntDesign
                 {
                     _selectedValue = value;
                     if (_isInitialized)
+                    {
                         OnValueChange(value);
+                        if (Form?.ValidateOnChange == true)
+                        {
+                            EditContext?.NotifyFieldChanged(FieldIdentifier);
+                        }
+                    }
                 }
             }
         }
@@ -346,6 +353,8 @@ namespace AntDesign
             get => !string.IsNullOrWhiteSpace(GroupName);
         }
 
+        internal ElementReference DropDownRef => _dropDown.GetOverlayComponent().Ref;
+
         internal SelectMode SelectMode => Mode.ToSelectMode();
         internal bool Focused { get; private set; }
         private string _searchValue = string.Empty;
@@ -409,9 +418,10 @@ namespace AntDesign
 
         private string _valueName;
 
-        private Func<TItem, TItemValue>   _getValue;
+        private Func<TItem, TItemValue> _getValue;
 
         private Action<TItem, TItemValue> _setValue;
+        private bool _disableSubmitFormOnEnter;
 
         #endregion Properties
 
@@ -1173,17 +1183,22 @@ namespace AntDesign
 
             if (EqualityComparer<TItemValue>.Default.Equals(value, default))
             {
-                OnSelectedItemChanged?.Invoke(default);
-                ValueChanged.InvokeAsync(default);
+                _ = InvokeAsync(() => OnInputClearClickAsync(new())); 
                 return;
             }
 
             var result = SelectOptionItems.FirstOrDefault(x => EqualityComparer<TItemValue>.Default.Equals(x.Value, value));
 
-            if (result == null && !AllowClear)
+            if (result == null)
             {
-                _ = TrySetDefaultValueAsync();
-
+                if (!AllowClear)
+                    _ = TrySetDefaultValueAsync();
+                else 
+                {
+                    //Reset value if not found - needed if value changed 
+                    //outside of the component
+                    _ = InvokeAsync(() => OnInputClearClickAsync(new()));
+                }
                 return;
             }
 
@@ -1889,6 +1904,11 @@ namespace AntDesign
                 {
                     await CloseAsync();
                 }
+            }
+
+            if ((key == "DELETE" || key == "BACKSPACE") && AllowClear)
+            {
+                await OnInputClearClickAsync(new MouseEventArgs());
             }
         }
 
