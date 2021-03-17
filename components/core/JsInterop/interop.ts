@@ -153,7 +153,10 @@ export function getBoundingClientRect(element) {
   return null;
 }
 
-export function addDomEventListener(element, eventName, preventDefault, invoker) {
+export function addDomEventListener(element, eventName, preventDefaultOrSelf, invoker) {
+  let {preventDefault, onlySelf} = preventDefaultOrSelf != null ?
+                        typeof preventDefaultOrSelf === 'boolean' ? {preventDefault: preventDefaultOrSelf, onlySelf: false} : preventDefaultOrSelf
+                        : {preventDefault: false, onlySelf: false};
   let callback = args => {
     const obj = {};
     for (let k in args) {
@@ -162,11 +165,22 @@ export function addDomEventListener(element, eventName, preventDefault, invoker)
       }
     }
     let json = JSON.stringify(obj, (k, v) => {
-      if (v instanceof Node) return 'Node';
-      if (v instanceof Window) return 'Window';
+      if (v instanceof Node) return {
+        type: 'Node',
+        classList: Array.from(v.classList)
+      };
+      if (v instanceof Window) return {
+        type: 'Window'
+      }
       return v;
     }, ' ');
-    invoker.invokeMethodAsync('Invoke', json);
+    if (onlySelf) {
+      if (args.currentTarget === args.target) {
+        invoker.invokeMethodAsync('Invoke', json);
+      }
+    } else {
+      invoker.invokeMethodAsync('Invoke', json);
+    }
     if (preventDefault === true) {
       args.preventDefault();
     }
@@ -485,7 +499,7 @@ export function getMaxZIndex() {
   return [...document.all].reduce((r, e) => Math.max(r, +window.getComputedStyle(e).zIndex || 0), 0)
 }
 
-export function getStyle(element, styleProp) {        
+export function getStyle(element, styleProp) {
   if (element.currentStyle)
     return element.currentStyle[styleProp];
   else if (window.getComputedStyle)
@@ -542,7 +556,7 @@ export function resizeTextArea(element, minRows, maxRows) {
     var offsetHeight = dims["paddingTop"] + dims["paddingBottom"] + dims["borderTop"] + dims["borderBottom"];
     var oldHeight = parseFloat(element.style.height);
     element.style.height = 'auto';
-    
+
     var rows = Math.trunc(element.scrollHeight / rowHeight);
     rows = Math.max(minRows, rows);
 
@@ -619,14 +633,14 @@ function preventKeys(e, keys: string[]) {
 }
 
 export function addPreventKeys(inputElement, keys: string[]) {
-  let dom = getDom(inputElement);   
+  let dom = getDom(inputElement);
   keys = keys.map(function (x) { return x.toUpperCase(); })
   funcDict[inputElement.id + "keydown"] = (e) => preventKeys(e, keys);
     (dom as HTMLElement).addEventListener("keydown", funcDict[inputElement.id + "keydown"], false);
 }
 
 export function removePreventKeys(inputElement) {
-  let dom = getDom(inputElement);            
+  let dom = getDom(inputElement);
   (dom as HTMLElement).removeEventListener("keydown", funcDict[inputElement.id + "keydown"]);
   funcDict[inputElement.id + "keydown"] = null;
 }
@@ -639,7 +653,7 @@ function preventKeyOnCondition(e, key: string, check: () => boolean) {
 }
 
 export function addPreventEnterOnOverlayVisible(element, overlayElement) {
-  let dom = getDom(element);   
+  let dom = getDom(element);
   funcDict[element.id + "keydown:Enter"] = (e) => preventKeyOnCondition(e, "enter", () => overlayElement.offsetParent !== null);
   (dom as HTMLElement).addEventListener("keydown", funcDict[element.id + "keydown:Enter"], false);
 }
